@@ -1,0 +1,38 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env/
+.venv/
+env/
+venv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs and output
+logs/
+*.log
+
+# Dataset & model checkpoints
+data/
+checkpoints/
+*.pth
+*.pt
+
+# Ignore ImageNet locally
+imagenet/
+
+# System-specific files
+.DS_Store
+Thumbs.db
+
+# VSCode settings
+.vscode/
+
+# Python packaging artifacts
+*.egg-info/
+dist/
+build/
