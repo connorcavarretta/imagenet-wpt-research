@@ -9,7 +9,7 @@ from dataloader import get_imagenet_loaders
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
-model = models.resnet18(pretrained=False, num_classes=1000).to(device)
+model = models.resnet18(weights=None, num_classes=1000).to(device)
 
 # Load data
 train_loader, val_loader = get_imagenet_loaders(
