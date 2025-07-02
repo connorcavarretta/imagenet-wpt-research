@@ -9,6 +9,8 @@ from torch.optim.lr_scheduler import CosineAnnealingLR, SequentialLR, LinearLR
 from timm.loss import LabelSmoothingCrossEntropy
 from timm.utils import ModelEmaV2
 from pathlib import Path
+from tqdm import tqdm
+
 
 CHECKPOINT_DIR = "checkpoints/convnext_base"
 LOG_PATH = "logs/convnext_base_training_log.csv"
@@ -62,10 +64,11 @@ def log_epoch(epoch, train_loss, train_acc, val_loss, val_acc):
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print('Using device:', device)
 
     # Load ConvNeXt model
     from models.convnext import ConvNeXt as model
-    model = model(depths=[3, 3, 27, 3], dims=[128, 256, 512, 1024]).to(device)
+    model = model(depths=[3, 3, 27, 3], dims=[128, 256, 512, 1024], num_classes=1000).to(device)
     model_ema = ModelEmaV2(model, decay=0.9999, device=device)
 
     # Load data
@@ -97,7 +100,7 @@ def main():
         model.train()
         train_loss, total, correct = 0.0, 0, 0
 
-        for images, labels in train_loader:
+        for images, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{total_epochs}", leave=False):
             images, labels = images.to(device), labels.to(device)
 
             optimizer.zero_grad()
