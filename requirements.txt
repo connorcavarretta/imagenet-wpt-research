@@ -3,3 +3,4 @@ torchvision
 pyyaml
 accelerate
 tqdm
+ptflops
