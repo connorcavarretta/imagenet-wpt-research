@@ -11,7 +11,6 @@ from timm.utils import ModelEmaV2
 from pathlib import Path
 from tqdm import tqdm
 
-
 CHECKPOINT_DIR = "checkpoints/convnext_base"
 LOG_PATH = "logs/convnext_base_training_log.csv"
 LATEST_CKPT = os.path.join(CHECKPOINT_DIR, "checkpoint_latest.pth")
@@ -28,7 +27,10 @@ def load_checkpoint(model, optimizer, scheduler, model_ema):
 
     print(f"Loading checkpoint from {LATEST_CKPT}")
     checkpoint = torch.load(LATEST_CKPT, map_location='cpu')
-    model.load_state_dict(checkpoint['model'])
+    if isinstance(model, nn.DataParallel):
+        model.module.load_state_dict(checkpoint['model'])
+    else:
+        model.load_state_dict(checkpoint['model'])
     optimizer.load_state_dict(checkpoint['optimizer'])
     scheduler.load_state_dict(checkpoint['scheduler'])
     model_ema.ema.load_state_dict(checkpoint['ema'])
@@ -69,6 +71,12 @@ def main():
     # Load ConvNeXt model
     from models.convnext import ConvNeXt as model
     model = model(depths=[3, 3, 27, 3], dims=[128, 256, 512, 1024], num_classes=1000).to(device)
+    
+    # Multi-GPU support
+    if torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs with DataParallel")
+        model = nn.DataParallel(model)
+
     model_ema = ModelEmaV2(model, decay=0.9999, device=device)
 
     # Load data
@@ -128,7 +136,7 @@ def main():
         # Save latest checkpoint
         save_checkpoint({
             'epoch': epoch,
-            'model': model.state_dict(),
+            'model': model.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict(),
             'optimizer': optimizer.state_dict(),
             'scheduler': scheduler.state_dict(),
             'ema': model_ema.ema.state_dict()
@@ -139,7 +147,7 @@ def main():
             best_val_acc = val_acc
             save_checkpoint({
                 'epoch': epoch,
-                'model': model.state_dict(),
+                'model': model.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict(),
                 'optimizer': optimizer.state_dict(),
                 'scheduler': scheduler.state_dict(),
                 'ema': model_ema.ema.state_dict()
