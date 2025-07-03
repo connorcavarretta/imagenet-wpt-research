@@ -33,7 +33,7 @@ def load_checkpoint(model, optimizer, scheduler, model_ema):
         model.load_state_dict(checkpoint['model'])
     optimizer.load_state_dict(checkpoint['optimizer'])
     scheduler.load_state_dict(checkpoint['scheduler'])
-    model_ema.ema.load_state_dict(checkpoint['ema'])
+    model_ema.module.load_state_dict(checkpoint['ema'])
     return checkpoint['epoch'] + 1
 
 
@@ -83,7 +83,7 @@ def main():
     train_loader, val_loader = get_imagenet_loaders(
         data_dir=os.environ.get("IMAGENET_PATH", "../imagenet"),
         batch_size=64,
-        num_workers=4,
+        num_workers=8,
         use_mixup=False,
         use_cutmix=False,
         rand_augment=True,
@@ -139,7 +139,7 @@ def main():
             'model': model.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict(),
             'optimizer': optimizer.state_dict(),
             'scheduler': scheduler.state_dict(),
-            'ema': model_ema.ema.state_dict()
+            'ema': model_ema.module.state_dict()
         }, LATEST_CKPT)
 
         # Save best model
@@ -150,7 +150,7 @@ def main():
                 'model': model.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict(),
                 'optimizer': optimizer.state_dict(),
                 'scheduler': scheduler.state_dict(),
-                'ema': model_ema.ema.state_dict()
+                'ema': model_ema.module.state_dict()
             }, os.path.join(CHECKPOINT_DIR, "best_model.pth"))
             print(f"Saved new best model at epoch {epoch+1} with val acc: {val_acc:.2f}%")
 
