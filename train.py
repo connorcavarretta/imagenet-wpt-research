@@ -82,8 +82,8 @@ def main():
     # Load data
     train_loader, val_loader = get_imagenet_loaders(
         data_dir=os.environ.get("IMAGENET_PATH", "../imagenet"),
-        batch_size=64,
-        num_workers=8,
+        batch_size=128,
+        num_workers=4,
         use_mixup=False,
         use_cutmix=False,
         rand_augment=True,
