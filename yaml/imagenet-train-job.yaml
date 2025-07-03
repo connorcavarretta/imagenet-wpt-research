@@ -14,9 +14,9 @@ spec:
         volumeMounts:
           - name: imagenet-pvc
             mountPath: /mnt/imagenet
-          - name: code-pvc
-            mountPath: /workspace
-        workingDir: /workspace
+          - name: cav-pvc
+            mountPath: /mnt/data
+        workingDir: /mnt/data
         resources:
           limits:
             memory: 12Gi
@@ -26,13 +26,12 @@ spec:
             memory: 12Gi
             cpu: 4000m
             nvidia.com/gpu: 3
-          
+        env:
+          - name: IMAGENET_PATH
+            value: /mnt/imagenet
         command: ["/bin/bash", "-c"]
         args:
           - |
-            set -e
-            git clone https://github.com/your-username/your-repo.git /workspace/your-repo
-            cd /workspace/your-repo
             pip install -r requirements.txt
             python train.py
 
@@ -40,8 +39,8 @@ spec:
         - name: imagenet-pvc
           persistentVolumeClaim:
             claimName: imagenet-pvc
-        - name: code-pvc
+        - name: cav-pvc
           persistentVolumeClaim:
-            claimName: code-pvc
+            claimName: cav-pvc
 
       restartPolicy: Never
