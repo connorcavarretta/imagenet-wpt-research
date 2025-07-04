@@ -16,14 +16,16 @@ spec:
             mountPath: /mnt/imagenet
           - name: cav-pvc
             mountPath: /mnt/data
+          - name: dshm
+            mountPath: /dev/shm
         workingDir: /mnt/data
         resources:
           limits:
-            memory: 12Gi
+            memory: 16Gi
             cpu: 4000m
             nvidia.com/gpu: "3"
           requests:
-            memory: 12Gi
+            memory: 16Gi
             cpu: 4000m
             nvidia.com/gpu: "3"
         env:
@@ -42,5 +44,18 @@ spec:
         - name: cav-pvc
           persistentVolumeClaim:
             claimName: cav-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values:
+                - NVIDIA-L40
 
       restartPolicy: Never

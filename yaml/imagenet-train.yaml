@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imagenet-train-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: imagenet-train
+  template:
+    metadata:
+      labels:
+        app: imagenet-train
+    spec:
+      containers:
+        - name: imagenet-trainer
+          image: pytorch/pytorch:2.2.0-cuda11.8-cudnn8-runtime
+          volumeMounts:
+            - name: imagenet-pvc
+              mountPath: /mnt/imagenet
+            - name: cav-pvc
+              mountPath: /mnt/data
+            - name: dshm
+              mountPath: /dev/shm
+          workingDir: /mnt/data
+          resources:
+            limits:
+              memory: 16Gi
+              cpu: 8000m
+              nvidia.com/gpu: "3"
+            requests:
+              memory: 16Gi
+              cpu: 8000m
+              nvidia.com/gpu: "3"
+          env:
+            - name: IMAGENET_PATH
+              value: /mnt/imagenet
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              pip install -r requirements.txt
+              python train.py --batch-size 256 --num-workers 8
+              tail -f /dev/null
+      volumes:
+        - name: imagenet-pvc
+          persistentVolumeClaim:
+            claimName: imagenet-pvc
+        - name: cav-pvc
+          persistentVolumeClaim:
+            claimName: cav-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: nvidia.com/gpu.product
+                    operator: In
+                    values:
+                      - NVIDIA-L40
+      restartPolicy: Always

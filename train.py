@@ -1,3 +1,5 @@
+#python train.py --batch-size 256 --num-workers 8
+
 import os
 import csv
 import torch
@@ -10,6 +12,7 @@ from timm.loss import LabelSmoothingCrossEntropy
 from timm.utils import ModelEmaV2
 from pathlib import Path
 from tqdm import tqdm
+import argparse
 
 CHECKPOINT_DIR = "checkpoints/convnext_base"
 LOG_PATH = "logs/convnext_base_training_log.csv"
@@ -65,6 +68,11 @@ def log_epoch(epoch, train_loss, train_acc, val_loss, val_acc):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Train ConvNeXt on ImageNet")
+    parser.add_argument('--batch-size', type=int, default=128, help='Batch size for training (default: 128)')
+    parser.add_argument('--num-workers', type=int, default=4, help='Number of data loading workers (default: 4)')
+    args = parser.parse_args()
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print('Using device:', device)
 
@@ -82,8 +90,8 @@ def main():
     # Load data
     train_loader, val_loader = get_imagenet_loaders(
         data_dir=os.environ.get("IMAGENET_PATH", "../imagenet"),
-        batch_size=128,
-        num_workers=4,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
         use_mixup=False,
         use_cutmix=False,
         rand_augment=True,
